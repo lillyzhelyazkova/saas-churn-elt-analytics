@@ -286,3 +286,31 @@ SELECT TRIM(ticket_id),
 	   satisfaction_score,
 	   CASE LOWER(TRIM(escalation_flag)) WHEN 'true' THEN 1 ELSE 0 END
 FROM stg_support_tickets;
+
+-- ====================================================================
+-- PHASE 3: PERFORMANCE OPTIMIZATION & RELATIONAL ENFORCEMENT
+-- ====================================================================
+
+-- Reactivate foreign key relationships
+PRAGMA foreign_keys = ON;
+
+-- Build performance indexes on date dimension and all foreign keys
+
+-- Date Dimension Index
+CREATE INDEX idx_accounts_signup_date ON dim_accounts(signup_date);
+
+-- Churn Events Fact Table Indexes
+CREATE INDEX idx_churn_events_account_id ON fact_churn_events(account_id);
+CREATE INDEX idx_churn_events_churn_date ON fact_churn_events(churn_date);
+
+-- Subscriptions Fact Table Indexes
+CREATE INDEX idx_subscriptions_account_id ON fact_subscriptions(account_id);
+CREATE INDEX idx_subscriptions_start_date ON fact_subscriptions(start_date);
+
+--Feature Usage Fact Table Indexes
+CREATE INDEX idx_feature_usage_subscription_id ON fact_feature_usage(subscription_id);
+CREATE INDEX idx_feature_usage_usage_date ON fact_feature_usage(usage_date);
+
+-- Support Tickets Fact Table Indexes
+CREATE INDEX idx_support_tickets_account_id ON fact_support_tickets(account_id);
+CREATE INDEX idx_support_tickets_submitted_at ON fact_support_tickets(submitted_at);
