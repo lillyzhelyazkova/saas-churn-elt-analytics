@@ -101,3 +101,15 @@ SELECT churn_flag,
 	   MAX(total_tickets) AS max_tickets_per_account
 FROM account_ticket_counts
 GROUP BY churn_flag;
+
+-- ====================================================================
+-- MULTI-SUBSCRIPTION CHURN & ACCOUNT DUPLICATION ANALYSIS
+-- ====================================================================
+
+--Identifies that 175 unique account IDs appear multiple times in the cancelation log (after discrepancies were found during Power BI calculations)
+SELECT account_id,
+       COUNT(*) AS churn_records
+FROM fact_churn_events
+GROUP BY account_id
+HAVING COUNT(*) > 1
+ORDER BY churn_records;
