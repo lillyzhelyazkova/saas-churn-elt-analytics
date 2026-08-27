@@ -24,6 +24,7 @@ SELECT (SELECT COUNT(*) FROM dim_accounts) AS total_accounts,
 	   (SELECT COUNT(*) FROM fact_feature_usage) AS total_feature_usage,
 	   (SELECT COUNT(*) FROM fact_support_tickets) AS total_tickets,
 	   (SELECT SUM(mrr_amount) FROM fact_subscriptions) AS total_mrr;
+	   (SELECT COUNT(DISTINCT account_id) FROM fact_subscriptions WHERE churn_flag = 1) AS total_tracked_churned_accounts;
 	   
 -- ====================================================================
 -- DATA INTEGRITY GAPS IDENTIFICATION
@@ -48,6 +49,20 @@ JOIN dim_accounts da ON fce.account_id = da.account_id
 LEFT JOIN fact_subscriptions fs ON fce.account_id = fs.account_id AND fs.churn_flag = 1
 WHERE fs.account_id IS NULL
 GROUP BY da.is_trial, da.plan_tier;
+
+-- Exposes 85 unique accounts that have a churn flag, but are not in churn events table
+SELECT DISTINCT account_id
+FROM fact_subscriptions
+WHERE churn_flag = 1
+AND account_id NOT IN (SELECT account_id FROM fact_churn_events);
+
+-- Shows that the real number of total unique churned accounts is 437
+SELECT DISTINCT account_id
+FROM fact_churn_events
+UNION
+SELECT DISTINCT account_id
+FROM fact_subscriptions
+WHERE churn_flag = 1;
 
 -- ====================================================================
 -- BUSINESS QUESTION QUERIES
