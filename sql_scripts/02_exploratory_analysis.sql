@@ -30,7 +30,7 @@ SELECT (SELECT COUNT(*) FROM dim_accounts) AS total_accounts,
 -- DATA INTEGRITY GAPS IDENTIFICATION
 -- ====================================================================
 
--- Identifies 214 churned accounts missing from subscriptions table 
+-- Identifies 214 churn records missing from subscriptions table 
 SELECT fce.churn_event_id,
        fce.account_id,
 	   fce.reason_code,
@@ -40,10 +40,15 @@ FROM fact_churn_events fce
 LEFT JOIN fact_subscriptions fs ON fce.account_id = fs.account_id AND fs.churn_flag = 1 -- Filters only canceled subscriptions
 WHERE fs.account_id IS NULL; -- Identifies missing records in subscriptions fact table
 
+-- Identifies 125 unique missing accounts from the subscriptions fact table
+SELECT DISTINCT account_id
+FROM fact_churn_events
+WHERE account_id NOT IN (SELECT account_id FROM fact_subscriptions WHERE churn_flag = 1);
+
 -- Reveals that 168 missing accounts were paid tiers and 46 were free trials, exposing a billing tracking bug
 SELECT da.is_trial,
        da.plan_tier,
-	   COUNT(fce.churn_event_id) AS total_missing churns
+	   COUNT(fce.churn_event_id) AS total_missing_churns
 FROM fact_churn_events fce
 JOIN dim_accounts da ON fce.account_id = da.account_id
 LEFT JOIN fact_subscriptions fs ON fce.account_id = fs.account_id AND fs.churn_flag = 1
